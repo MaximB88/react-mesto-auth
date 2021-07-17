@@ -2,7 +2,6 @@ import '../index.css';
 import Header from './Header';
 import Main from './Main';
 import Footer from './Footer';
-import PopupWithForm from './PopupWithForm';
 import EditProfilePopup from './EditProfilePopup';
 import AddPlacePopup from './AddPlacePopup';
 import EditAvatarPopup from './EditAvatarPopup';
@@ -15,21 +14,22 @@ import api from '../utils/api';
 import React from 'react';
 import { Route, Redirect, useHistory } from 'react-router-dom';
 import * as auth from '../utils/auth';
+import InfoTooltip from './InfoTolltip';
 
 
 function App() {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = React.useState(false);
     const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false);
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = React.useState(false);
+    const [isInfoTooltipPopupOpen, setIsInfoTooltipPopupOpen] = React.useState(false);
     
     const [selectedCard, setSelectedCard] = React.useState(null);
     const [currentUser, setCurrentUser] = React.useState({});
     const [cards, setCards] = React.useState([]);
 
     const [loggedIn, setLoggedIn] = React.useState(false);
-    const [userEmail, setUserEmail] = React.useState('')
-    const [isInfoTooltipPopupOpen, setIsInfoTooltipPopupOpen] = React.useState(false)
-    const [isSuccessRegistration, setIsSuccessRegistration] = React.useState(false)
+    const [userEmail, setUserEmail] = React.useState('');
+    const [isSuccessRegister, setIsSuccessRegister] = React.useState(false);
     const history = useHistory();
 
     React.useEffect(() => {
@@ -71,6 +71,7 @@ function App() {
         setIsEditAvatarPopupOpen(false);
         setIsEditProfilePopupOpen(false);
         setIsAddPlacePopupOpen(false);
+        setIsInfoTooltipPopupOpen(false);
         setSelectedCard(null);
     }
 
@@ -114,23 +115,24 @@ function App() {
                 setCards([newCard, ...cards]);
                 closeAllPopups();
             })
-            .catch(err => console.log(`Ошибка: ${err}`))
+            .catch(err => console.log(`Ошибка: ${err}`));
     }
 
     //регистрация
     function handleRegister(email, password) {
         return auth.register(email, password)
             .then(res => {
-                localStorage.setItem('token', res.token)
-                setIsInfoTooltipPopupOpen(true)
-                history.push('/sign-in')
+                localStorage.setItem('token', res.token);
+                setIsInfoTooltipPopupOpen(true);
+                setIsSuccessRegister(true);
+                history.push('/sign-in');
             })
             .catch(() => {
-                setIsInfoTooltipPopupOpen(true)
-                setIsSuccessRegistration(false)
+                setIsInfoTooltipPopupOpen(true);
+                setIsSuccessRegister(false);
             })
             .catch(err => {
-                console.log(`Ошибка: ${err}.`)
+                console.log(`Ошибка: ${err}.`);
             })
     }
 
@@ -138,12 +140,12 @@ function App() {
     function handleLogin(email, password) {
         return auth.authorization(email, password)
             .then(res => {
-                localStorage.setItem('token', res.token)
-                setLoggedIn(true)
-                history.push('/')
+                localStorage.setItem('token', res.token);
+                setLoggedIn(true);
+                history.push('/');
             })
             .catch(err => {
-                console.log(`Ошибка: ${err}.`)
+                console.log(`Ошибка: ${err}.`);
             })
     }
 
@@ -153,28 +155,29 @@ function App() {
         if (token) {
             auth.getToken(token)
                 .then(res => {
-                    setUserEmail(res.data.email)
-                    setLoggedIn(true)
+                    setUserEmail(res.data.email);
+                    setLoggedIn(true);
                 })
                 .catch(err => {
-                    console.log(`Ошибка: ${err}.`)
+                    console.log(`Ошибка: ${err}.`);
                 })
         } else {
-            console.log('Токен отсутствует')
+            console.log('Токен отсутствует');
             return
         }
     }
 
+    //выход из аккаунта
     function handleSignOut() {
-        localStorage.removeItem('token')
-        setLoggedIn(false)
-        setUserEmail('')
-        history.push('/sign-in')
+        localStorage.removeItem('token');
+        setLoggedIn(false);
+        setUserEmail('');
+        history.push('/sign-in');
     }
     
     return (
         <CurrentUserContext.Provider value={currentUser}>
-            <Header onSignOut={handleSignOut} userEmail={userEmail} loggedIn={loggedIn} />
+            <Header loggedIn={loggedIn} onSignOut={handleSignOut} userEmail={userEmail}  />
             <ProtectedRoute 
                 path="/" 
                 component={Main}
@@ -205,7 +208,7 @@ function App() {
                     <ImagePopup data={selectedCard !== null && selectedCard} onClose={closeAllPopups} />
                 </>
             }
-                  
+            <InfoTooltip isRegister={isSuccessRegister} isOpen={isInfoTooltipPopupOpen} onClose={closeAllPopups} />     
             
         </CurrentUserContext.Provider>
   );
