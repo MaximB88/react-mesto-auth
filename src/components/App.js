@@ -34,7 +34,7 @@ function App() {
 
     React.useEffect(() => {
         checkToken()
-    }, [loggedIn])
+    }, [])
 
     React.useEffect(() => {
         if (loggedIn) {
@@ -81,6 +81,7 @@ function App() {
                 setCurrentUser(userData);
                 closeAllPopups();
             })
+            .catch(err => console.log(`Ошибка: ${err}`));
     }
 
     function hanadleUpdateAvatar(data) {
@@ -89,7 +90,7 @@ function App() {
                 setCurrentUser(userData);
                 closeAllPopups();
             })
-            .catch(err => console.log(`Ошибка: ${err}`))
+            .catch(err => console.log(`Ошибка: ${err}`));
     }
 
     function handleCardLike(data) {
@@ -121,10 +122,10 @@ function App() {
     //регистрация
     function handleRegister(email, password) {
         return auth.register(email, password)
-            .then(res => {
-                localStorage.setItem('token', res.token);
+            .then(() => {
                 setIsInfoTooltipPopupOpen(true);
                 setIsSuccessRegister(true);
+                setUserEmail(email);
                 history.push('/sign-in');
             })
             .catch(() => {
@@ -140,6 +141,7 @@ function App() {
     function handleLogin(email, password) {
         return auth.authorization(email, password)
             .then(res => {
+                console.log(res);
                 localStorage.setItem('token', res.token);
                 setLoggedIn(true);
                 history.push('/');
@@ -162,7 +164,6 @@ function App() {
                     console.log(`Ошибка: ${err}.`);
                 })
         } else {
-            console.log('Токен отсутствует');
             return
         }
     }
