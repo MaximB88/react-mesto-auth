@@ -12,7 +12,7 @@ import ProtectedRoute from './ProtectedRoute';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 import api from '../utils/api';
 import React from 'react';
-import { Route, Redirect, useHistory } from 'react-router-dom';
+import { Route, Redirect, useHistory, Switch } from 'react-router-dom';
 import * as auth from '../utils/auth';
 import InfoTooltip from './InfoTolltip';
 
@@ -97,7 +97,8 @@ function App() {
         const isLiked = data.likes.some(i => i._id === currentUser._id);
         api.changeLikeCount(data._id, !isLiked).then((newCard) => {
             setCards((state) => state.map((c) => c._id === data._id ? newCard : c));
-        });
+        })
+        .catch(err => console.log(`Ошибка: ${err}`));
     }
 
     function handleCardDelete(data) {
@@ -107,7 +108,7 @@ function App() {
                 setCards(newArrCards);
                 closeAllPopups();
             })
-            .catch(err => console.log(`Ошибка: ${err}`))
+            .catch(err => console.log(`Ошибка: ${err}`));
     }
 
     function handlePlaceAddSubmit(data) {
@@ -141,9 +142,9 @@ function App() {
     function handleLogin(email, password) {
         return auth.authorization(email, password)
             .then(res => {
-                console.log(res);
                 localStorage.setItem('token', res.token);
                 setLoggedIn(true);
+                setUserEmail(email);
                 history.push('/');
             })
             .catch(err => {
@@ -191,15 +192,17 @@ function App() {
                 onCardDelete={handleCardDelete}
                 cards={cards}
             />
-            <Route>
-                {loggedIn ? <Redirect to='/' /> : <Redirect to='sign-up' />}
-            </Route>
-            <Route path="/sign-in">
-                <Login onLogin={handleLogin} />
-            </Route>
-            <Route path="/sign-up">
-                <Register onRegister={handleRegister} />
-            </Route>
+            <Switch>
+                <Route path="/sign-in">
+                    <Login onLogin={handleLogin} />
+                </Route>
+                <Route path="/sign-up">
+                    <Register onRegister={handleRegister} />
+                </Route>
+                <Route exact path="/">
+                    {loggedIn ? <Redirect to='/' /> : <Redirect to='sign-up' />}
+                </Route>
+            </Switch>
             <Footer />
             {loggedIn && 
                 <>
